@@ -6,7 +6,7 @@ import numpy as py
 img = cv2.imread("../resources/img/cards.png")
 
 width, height = 250, 350
-points = [732, 142], [767, 223], [648, 208], [617, 123];
+points = [732, 142], [767, 223], [648, 208], [617, 123]
 pts1 = np.float32([points])
 # pts1 = np.float32([[0, 0], [0, 10], [10, 10], [10, 0]])
 pts2 = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
