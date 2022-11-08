@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from stack import imStack
 
 # chapter 002
 webcam = cv2.VideoCapture(0)
@@ -19,7 +20,8 @@ while webcam.isOpened():
     imgDilation = cv2.dilate(imgCanny, kernel, iterations=1)
     imgEroded = cv2.erode(imgDilation, kernel, iterations=1)
 
-    imgHor = np.hstack((imgGray, imgBlur, imgCanny, imgDilation, imgEroded))
+    # imgHor = np.hstack((imgGray, imgBlur, imgCanny, imgDilation, imgEroded))
+    imgHor = imStack([[img, imgGray, imgBlur, imgCanny, imgDilation, imgEroded]])
 
     imgGray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     imgBlur2 = cv2.GaussianBlur(imgGray2, (15, 15), 0)
