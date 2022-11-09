@@ -18,9 +18,10 @@ def imStack(imgArr, scale=1):
     for x in imgArr:
         for y in x:
             if not y.shape.__len__() > 2:
-                imgList[i].append(cv2.cvtColor(y, cv2.COLOR_GRAY2BGR))
+                imgTemp = cv2.cvtColor(y, cv2.COLOR_GRAY2BGR)
+                imgList[i].append(cv2.resize(imgTemp, (int(imgTemp.shape[1]*scale), int(imgTemp.shape[0]*scale))))
             else:
-                imgList[i].append(y)
+                imgList[i].append(cv2.resize(y, (int(y.shape[1]*scale), int(y.shape[0]*scale))))
         i += 1
 
     imgStacked = []
