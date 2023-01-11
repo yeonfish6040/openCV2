@@ -17,6 +17,9 @@ def imStack(imgArr, scale=1):
             if y.shape.__len__() > 2:
                 if y.shape[2] > type:
                     type = y.shape[2]
+            else:
+                if not type > 2:
+                    type = 2
         if imgCountMax < x.__len__():
             imgCountMax = x.__len__()
 
@@ -24,7 +27,7 @@ def imStack(imgArr, scale=1):
     for x in imgArr:
         j = 0
         for y in x:
-            if not y.shape.__len__() > 2:
+            if not (lambda y: (lambda y: True if y.shape[2] != 2 else False) if y.shape.__len__() > 2 else False)(y) and type > 2:
                 imgTemp = cv2.cvtColor(y, cv2.COLOR_GRAY2BGR)
                 imgList[i].append(cv2.resize(imgTemp, shape))
             else:
@@ -32,9 +35,14 @@ def imStack(imgArr, scale=1):
             j += 1
         if j < imgCountMax:
             for k in range(0, imgCountMax-j):
-                imgTemp = np.zeros((shape[1], shape[0], (lambda type : type if type > 2 else 2)(type)), np.uint8)
-                cv2.line(imgTemp, (0, 0), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 0), 3)
-                cv2.line(imgTemp, (imgTemp.shape[1], 0), (0, imgTemp.shape[0]), (255, 255, 0), 3)
+                imgTemp = np.zeros((lambda type, shape: (shape[1], shape[0], type) if type > 2 else (shape[1], shape[0]))(type, shape), np.uint8)
+                cv2.line(imgTemp, (0, 0), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 0), 2)
+                cv2.line(imgTemp, (imgTemp.shape[1], 0), (0, imgTemp.shape[0]), (255, 255, 0), 2)
+                cv2.line(imgTemp, (0, 0), (0, imgTemp.shape[0]), (255, 255, 255), 1)
+                cv2.line(imgTemp, (0, imgTemp.shape[0]), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 255), 1)
+                cv2.line(imgTemp, (imgTemp.shape[1], imgTemp.shape[0]), (imgTemp.shape[1], 0), (255, 255, 255), 1)
+                cv2.line(imgTemp, (imgTemp.shape[1], 0), (0, 0), (255, 255, 255), 1)
+                imgTemp = (lambda type, img: img if type > 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))(type, imgTemp)
                 imgList[i].append(cv2.resize(imgTemp, (int(imgTemp.shape[1]), int(imgTemp.shape[0]))))
         i += 1
 
