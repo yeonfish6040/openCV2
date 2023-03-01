@@ -7,4 +7,20 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/chapter_007" />
+        <option value="$MODULE_DIR$/chapter_005" />
+        <option value="$MODULE_DIR$/chapter_003" />
+        <option value="$MODULE_DIR$/chapter_006" />
+        <option value="$MODULE_DIR$/playground" />
+        <option value="$MODULE_DIR$/chapter_009" />
+        <option value="$MODULE_DIR$/chapter_004" />
+        <option value="$MODULE_DIR$/chapter_008" />
+        <option value="$MODULE_DIR$/chapter_001" />
+        <option value="$MODULE_DIR$/chapter_002" />
+      </list>
+    </option>
+  </component>
 </module>
