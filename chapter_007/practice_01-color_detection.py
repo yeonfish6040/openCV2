@@ -30,7 +30,7 @@ def onTrackBarChange(x):
 
     imgResult = cv2.bitwise_and(img, img, mask=mask)
 
-    all = imStack([[img, imgHSV], [mask, imgResult]], 0.3)
+    all = imStack([[img, imgHSV], [mask, imgResult]], 1)
 
     cv2.imshow("Output - all", all)
 

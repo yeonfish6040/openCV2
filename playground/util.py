@@ -100,6 +100,9 @@ class contourUtil:
 
     def drawRect(self, img):
         imgRect = self.drawContours(img)
+        i = 0
         for approx, (x, y, w, h) in self.getContours(img):
             imgRect = cv2.rectangle(imgRect, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv2.putText(imgRect, str(i), (x + (w // 2) - 10, y + (h // 2) - 10), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 1)
+            i += 1
         return imgRect

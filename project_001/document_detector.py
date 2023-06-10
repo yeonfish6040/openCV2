@@ -8,10 +8,9 @@ widthImg=540
 heightImg =640
 #####################################
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(10,150)
 
-cap.release()
 
 def preProcessing(img):
     imgGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -64,7 +63,8 @@ def getWarp(img,biggest):
     return imgCropped
 
 while True:
-    img = cv2.imread("../resources/img/document.jpeg")
+    # img = cv2.imread("../resources/img/document.jpeg")
+    success, img = cap.read()
     img = cv2.resize(img,(widthImg,heightImg))
     imgContour = img.copy()
 
@@ -81,8 +81,11 @@ while True:
         #               [img, img])
         imageArray = ([imgContour, img])
 
-    stackedImages = imStack([imageArray, [imgWarped]])
+
+    stackedImages = imStack([imageArray])
     cv2.imshow("WorkFlow", stackedImages)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+cap.release()

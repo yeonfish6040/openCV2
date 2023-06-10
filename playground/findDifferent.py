@@ -35,7 +35,7 @@ def loop():
     au.setMinSize(cv2.getTrackbarPos("minSize", "TrackBar"))
     bu.setMinSize(cv2.getTrackbarPos("minSize", "TrackBar"))
 
-    cv2.imshow("Different Point", util.imStack([[au.drawRect(imgGray), bu.drawRect(imgGray), imgGray]]))
+    cv2.imshow("Different Point", util.imStack([[au.drawRect(imgGray), bu.drawRect(imgGray), imgGray]], 0.5))
     if cv2.waitKey(500) == ord('q'):
         sys.exit()
     else:
