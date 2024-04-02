@@ -63,8 +63,8 @@ def getWarp(img,biggest):
     return imgCropped
 
 while True:
-    # img = cv2.imread("../resources/img/document.jpeg")
-    success, img = cap.read()
+    img = cv2.imread("../resources/img/document.jpeg")
+    # success, img = cap.read()
     img = cv2.resize(img,(widthImg,heightImg))
     imgContour = img.copy()
 

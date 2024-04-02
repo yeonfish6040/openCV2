@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from chapter_006.stack import imStack
 from skimage.metrics import structural_similarity
 
@@ -40,22 +41,22 @@ def loop():
                 ok = False
         if ok:
             imgList.append(img[y:y+h, x:x+w])
-            try:
-                cv2.imwrite("faces/face_"+str(i)+".png", img[y:y+h, x:x+w])
-            except Exception as e:
-                pass
+            # try:
+            #     cv2.imwrite("faces/face_"+str(i)+".png", img[y:y+h, x:x+w])
+            # except Exception as e:
+            #     pass
             i += 1
-    for (x, y, w, h) in eyes:
-        for face in faces:
-            if face[0] < x and face[1] < y and face[0]+face[2] > x+w and face[1]+face[3] > y+h:
-                cv2.putText(img, "eye", (x + w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 2, lineType=cv2.LINE_AA)
-                cv2.putText(img, "eye", (x + w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1, lineType=cv2.LINE_AA)
-                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+    # for (x, y, w, h) in eyes:
+    #     for face in faces:
+    #         if face[0] < x and face[1] < y and face[0]+face[2] > x+w and face[1]+face[3] > y+h:
+    #             cv2.putText(img, "eye", (x + w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 2, lineType=cv2.LINE_AA)
+    #             cv2.putText(img, "eye", (x + w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1, lineType=cv2.LINE_AA)
+    #             cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
 
     cv2.imshow("Result", img)
     if faceList.__len__() > 0:
-        cv2.imshow("faces", imStack(faceList))
+        cv2.imshow("faces", imStack([faceList]))
     cv2.waitKey(1)
     loop()
 

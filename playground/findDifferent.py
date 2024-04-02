@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import util
 
+# img = cv2.imread("./resource/img.png")
 img = cv2.imread("./resource/diff.jpeg")
 img1 = img[:, :int(img.shape[1]/2)]
 img2 = img[:, int(img.shape[1]/2)-7:]
@@ -35,7 +36,7 @@ def loop():
     au.setMinSize(cv2.getTrackbarPos("minSize", "TrackBar"))
     bu.setMinSize(cv2.getTrackbarPos("minSize", "TrackBar"))
 
-    cv2.imshow("Different Point", util.imStack([[au.drawRect(imgGray), bu.drawRect(imgGray), imgGray]], 0.5))
+    cv2.imshow("Different Point", util.imStack([[au.drawRect(imgGray), bu.drawRect(imgGray)], [imgGray], [img1, img2]], 0.8))
     if cv2.waitKey(500) == ord('q'):
         sys.exit()
     else:

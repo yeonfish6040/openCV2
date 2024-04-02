@@ -36,8 +36,10 @@ def imStack(imgArr, scale=1):
         if j < imgCountMax:
             for k in range(0, imgCountMax-j):
                 imgTemp = np.zeros((lambda type, shape: (shape[1], shape[0], type) if type > 2 else (shape[1], shape[0]))(type, shape), np.uint8)
-                cv2.line(imgTemp, (0, 0), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 0), 2)
-                cv2.line(imgTemp, (imgTemp.shape[1], 0), (0, imgTemp.shape[0]), (255, 255, 0), 2)
+                cv2.line(imgTemp, (0, 0), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 0), 2) # X
+                cv2.line(imgTemp, (imgTemp.shape[1], 0), (0, imgTemp.shape[0]), (255, 255, 0), 2) # X
+
+                # ㅁ
                 cv2.line(imgTemp, (0, 0), (0, imgTemp.shape[0]), (255, 255, 255), 1)
                 cv2.line(imgTemp, (0, imgTemp.shape[0]), (imgTemp.shape[1], imgTemp.shape[0]), (255, 255, 255), 1)
                 cv2.line(imgTemp, (imgTemp.shape[1], imgTemp.shape[0]), (imgTemp.shape[1], 0), (255, 255, 255), 1)
