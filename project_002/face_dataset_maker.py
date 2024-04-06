@@ -1,24 +1,26 @@
 import cv2
 import os
 from chapter_006.stack import imStack
-from skimage.metrics import structural_similarity
 
 upperbodyCascade = cv2.CascadeClassifier("../resources/haarcascades/haarcascade_upperbody.xml")
 faceCascade = cv2.CascadeClassifier("../resources/haarcascades/haarcascade_frontalface_default.xml")
 eyeCascade = cv2.CascadeClassifier("../resources/haarcascades/haarcascade_eye.xml")
 cam = cv2.VideoCapture(0)
 
+type = "validation"
+# type = "faces"
+
 uid = input("Enter your ID: ")
+if not os.path.exists(type+"/" + str(uid)):
+    os.makedirs(type+"/" + str(uid))
 
+trainList = os.listdir(type+"/"+uid)
 
-trainList = os.listdir("faces")
-trainList.sort(reverse=True)
-filteredTrainList = []
 i = 0
-for s in trainList:
-    if "face_%s" % uid in s:
-        i += 1
-i += 1
+for e in trainList:
+    if e.find(".jpg") != -1:
+        if int(e.split(".")[0]) > i:
+            i = int(e.split(".")[0])
 imgList = []
 def loop():
     global i
@@ -40,9 +42,10 @@ def loop():
 
         imgList.append(img[y:y+h, x:x+w])
         try:
-            cv2.imwrite("faces/face_" + str(uid) + "_" + str(i) + ".png", img[y:y + h, x:x + w])
+            cv2.imwrite(type+"/" + str(uid) + "/" + str(i) + ".jpg", img[y:y + h, x:x + w], [cv2.IMWRITE_JPEG_QUALITY, 100])
         except Exception as e:
             pass
+        print("\rNum: " + str(i), end="")
         i += 1
 
 

@@ -1,31 +1,113 @@
 import time
-# import cv2
-import numpy as np
-from PIL import Image
 import os
-import torch
-import torch.nn.functional as Functional
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+
+import matplotlib.pyplot as plt
+import numpy as np
+import PIL
+import tensorflow as tf
+
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential
 
 
+print("Start loading dataset...")
+batch_size = 32
+img_height = 180
+img_width = 180
+data_dir = os.getcwd()+"/faces"
+validation_dir = os.getcwd()+"/validation"
 
+data_augmentation = keras.Sequential(
+  [
+    layers.RandomFlip("horizontal",
+                      input_shape=(img_height,
+                                  img_width,
+                                  3)),
+    layers.RandomRotation(0.1),
+    layers.RandomZoom(0.1),
+  ]
+)
 
-faces, ids = getImagesAndLabels('faces')
+train_ds = tf.keras.utils.image_dataset_from_directory(
+  data_dir,
+  validation_split=0.2,
+  subset="training",
+  seed=123,
+  image_size=(img_height, img_width),
+  batch_size=batch_size)
+val_ds = tf.keras.utils.image_dataset_from_directory(
+  validation_dir,
+  validation_split=0.2,
+  subset="validation",
+  seed=123,
+  image_size=(img_height, img_width),
+  batch_size=batch_size)
+print("Finished loading dataset.")
+
+# print("Loading data...")
+# normalization_layer = layers.Rescaling(1./255)
+#
+# normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+# image_batch, labels_batch = next(iter(normalized_ds))
+# print("Finished loading data.")
+
+print("Building model...")
+
+num_classes = len(train_ds.class_names)
+
+model = Sequential([
+  layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Conv2D(32, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Conv2D(64, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Flatten(),
+  layers.Dense(128, activation='relu'),
+  layers.Dense(num_classes)
+])
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+print("Finished building model.")
+model.summary()
 
 startTime = time.time()
 
-print("Training... (it can take a few minutes)")
+print("Training started...")
 
-torch.tensor()
-
-# recognizer = cv2.face.LBPHFaceRecognizer_create()
-# recognizer.train(faces,np.array(ids))
-
-trainList = os.listdir("trains")
-trainList.sort(reverse=True)
-if trainList.__len__() == 0:
-    trainList.append("_-1")
-recognizer.write('trains/train_%d.yml' % (int((trainList[0]).split("_")[1].split(".")[0]) + 1))
+epochs = 30
+history = model.fit(
+  train_ds,
+  validation_data=val_ds,
+  epochs=epochs
+)
 
 print("Finished! Time: ", time.time()-startTime)
+
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs_range = range(epochs)
+
+plt.figure(figsize=(8, 8))
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, acc, label='Training Accuracy')
+plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy')
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss')
+plt.show()
+
+model.save("my_model.h5")
