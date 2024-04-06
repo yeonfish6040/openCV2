@@ -9,6 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+from tensorflow.python.client import device_lib
 
 
 print("Start loading dataset...")
@@ -52,41 +53,77 @@ print("Finished loading dataset.")
 # image_batch, labels_batch = next(iter(normalized_ds))
 # print("Finished loading data.")
 
+num_classes = len(train_ds.class_names)
+gpus = device_lib.list_local_devices()
+
+input("Press any key to continue")
+
+print()
+
+tf.debugging.set_log_device_placement(True)
+if len(gpus) > 1:
+    strategy = tf.distribute.MirroredStrategy([gpu.name for gpu in gpus])
+    print('Running on multiple GPUs ', [gpu.name for gpu in gpus])
+elif len(gpus) == 2:
+    strategy = tf.distribute.get_strategy()
+    print('Running on single GPU', gpus[0].name)
+    print('#accelerators: ', strategy.num_replicas_in_sync)
+else:
+    strategy = tf.distribute.get_strategy()
+    print("Running on single CPU only")
+
+print()
+
+input("Press any key to build model")
+
 print("Building model...")
 
-num_classes = len(train_ds.class_names)
+with strategy.scope():
+    model = Sequential([
+        layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+        layers.Conv2D(16, 3, padding='same', activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Conv2D(32, 3, padding='same', activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Conv2D(64, 3, padding='same', activation='relu'),
+        layers.MaxPooling2D(),
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dense(num_classes)
+    ])
+    model.compile(optimizer='adam',
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
 
-model = Sequential([
-  layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(32, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Flatten(),
-  layers.Dense(128, activation='relu'),
-  layers.Dense(num_classes)
-])
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+    print("Finished building model.")
+    model.summary()
 
-print("Finished building model.")
-model.summary()
+    print()
+    input("Press any key to start training")
+    print()
 
-startTime = time.time()
+    startTime = time.time()
 
-print("Training started...")
+    print("Training started...")
 
-epochs = 30
-history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs
-)
+    epochs = 1
+    history = model.fit(
+      train_ds,
+      validation_data=val_ds,
+      epochs=epochs
+    )
 
-print("Finished! Time: ", time.time()-startTime)
+    print("Finished! Time: ", time.time()-startTime)
+
+trainList = os.listdir("trains")
+trainList.sort(reverse=True)
+i = 0
+for e in trainList:
+    if e.split(".") != "":
+        if int(e.split(".")[0].split("_")[1]) > i:
+            i = int(e.split(".")[0].split("_")[1])
+model.save("trains/train_%d.h5" % (i+1))
+print("Model saved.")
 
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
@@ -110,4 +147,4 @@ plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
 
-model.save("my_model.h5")
+
