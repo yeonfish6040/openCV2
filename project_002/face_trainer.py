@@ -3,44 +3,29 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
 import tensorflow as tf
 
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.python.client import device_lib
+from tensorflow.keras.models import Sequential, Model
 
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 print("Start loading dataset... \n")
-batch_size = 32
-img_height = 540
-img_width = 540
+batch_size = 16
+img_height = 260
+img_width = 260
 data_dir = os.getcwd()+"/faces"
 validation_dir = os.getcwd()+"/validation"
 
 data_augmentation = keras.Sequential(
   [
-    layers.RandomFlip("horizontal",
-                      input_shape=(img_height,
-                                  img_width,
-                                  3)),
-    layers.RandomRotation(0.1),
-    layers.RandomZoom(0.1),
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.5),
+    layers.RandomZoom(0.3),
   ]
-)
-datagen = ImageDataGenerator(
-    rotation_range=1,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    shear_range=0.1,
-    zoom_range=0.1,
-    horizontal_flip=True,
-    fill_mode='nearest'
 )
 
 train_ds = tf.keras.utils.image_dataset_from_directory(
@@ -57,9 +42,11 @@ val_ds = tf.keras.utils.image_dataset_from_directory(
   seed=123,
   image_size=(img_height, img_width),
   batch_size=batch_size)
-val_ds = val_ds.map(
-  lambda x, y: (data_augmentation(x, training=True), y)
-)
+# val_ds = val_ds.map(
+#   lambda x, y: (data_augmentation(x, training=True), y)
+# )
+
+
 print("classes: ", train_ds.class_names)
 
 print("\nFinished loading dataset.\n")
@@ -97,18 +84,20 @@ input("Press any key to build model")
 print("Building model...")
 
 with strategy.scope():
+
     model = Sequential([
-        layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-        layers.Conv2D(16, 3, padding='same', activation='relu'),
-        layers.MaxPooling2D(),
-        layers.Conv2D(32, 3, padding='same', activation='relu'),
-        layers.MaxPooling2D(),
-        layers.Conv2D(64, 3, padding='same', activation='relu'),
-        layers.MaxPooling2D(),
+        layers.Rescaling(1. / 255, input_shape=(260, 260, 3)),
+        layers.Conv2D(16, (3, 3), activation='relu'),
+        layers.MaxPooling2D(2, 2),
+        layers.Conv2D(32, (3, 3), activation='relu'),
+        layers.MaxPooling2D(2, 2),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.MaxPooling2D(2, 2),
         layers.Flatten(),
         layers.Dense(128, activation='relu'),
-        layers.Dense(num_classes)
+        layers.Dense(6, activation='softmax')
     ])
+
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
@@ -127,7 +116,7 @@ with strategy.scope():
         return model.fit(
           dataset,
           validation_data=dataset_val,
-          epochs=epochs_val
+          epochs=epochs_val,
         )
 
     acc_arr = []
@@ -160,62 +149,53 @@ with strategy.scope():
         plt.show()
 
     def setDataAugmentation():
-        if i % 2 == 0:
-            train_ds = tf.keras.utils.image_dataset_from_directory(
-                data_dir,
-                validation_split=0.2,
-                subset="training",
-                seed=123,
-                image_size=(img_height, img_width),
-                batch_size=batch_size)
-            return train_ds.map(
-                lambda x, y: (data_augmentation(x, training=True), y)
-            )
-        else:
-            return datagen.flow_from_directory(
-                data_dir,
-                target_size=(img_height, img_width),
-                batch_size=batch_size,
-                class_mode='binary',
-                subset='training'
-            )
+        train_ds = tf.keras.utils.image_dataset_from_directory(
+            data_dir,
+            validation_split=0.2,
+            subset="training",
+            seed=123,
+            image_size=(img_height, img_width),
+            batch_size=batch_size)
+        return train_ds.map(
+            lambda x, y: (data_augmentation(x, training=True), y)
+        )
 
-    i = 0
-    while True:
-        print("Training started...")
+    try:
+        epochs = int(input("epochs: "))
+        i = 0
+        while True:
+            print("Training started...")
 
-        epochs = 10
 
-        history = train(train_ds, val_ds, epochs)
+            history = train(train_ds, val_ds, epochs)
 
-        print("Finished! Time: ", time.time()-startTime)
+            print("Finished! Time: ", time.time() - startTime)
 
-        showAcc(history, epochs)
+            showAcc(history, epochs)
 
-        if is_continue.startswith("y"):
-            if int(is_continue.replace("y", "").strip()) <= i:
-                is_continue = "n"
-            else:
+            if is_continue.startswith("y"):
+                if int(is_continue.replace("y", "").strip()) <= i:
+                    is_continue = "n"
+                else:
+                    i += 1
+                    train_ds = setDataAugmentation()
+                    continue
+
+            is_go = input("Do you want to continue training with data augmentation? (y/n): ")
+            if is_go == "y":
                 i += 1
                 train_ds = setDataAugmentation()
                 continue
-
-
-
-        is_go = input("Do you want to continue training with data augmentation? (y/n): ")
-        if is_go == "n":
             break
-        elif is_go == "y":
-            i += 1
-            train_ds = setDataAugmentation()
 
-
+    except KeyboardInterrupt:
+        pass
 
 
 trainList = os.listdir("trains")
 i = 0
 for e in trainList:
-    if e.split(".") != "":
+    if e.split(".")[0] != "":
         if int(e.split(".")[0].split("_")[1]) > i:
             i = int(e.split(".")[0].split("_")[1])
 model.save("trains/train_%d.keras" % (i+1))

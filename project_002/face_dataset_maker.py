@@ -1,3 +1,12 @@
+# conda create -n tensorflow python=3.9
+# conda activate tensorflow
+# python -m pip install matplotlib
+# python -m pip install tensorflow-macos==2.10
+# python -m pip install tensorflow-metal
+# python -m pip install tensorflow-macos==2.12
+# python -m pip install keras_applications
+# python -m pip install opencv-python
+
 import cv2
 import os
 from chapter_006.stack import imStack
@@ -7,8 +16,8 @@ faceCascade = cv2.CascadeClassifier("../resources/haarcascades/haarcascade_front
 eyeCascade = cv2.CascadeClassifier("../resources/haarcascades/haarcascade_eye.xml")
 cam = cv2.VideoCapture(0)
 
-type = "validation"
-# type = "faces"
+# type = "validation"
+type = "faces"
 
 uid = input("Enter your ID: ")
 if not os.path.exists(type+"/" + str(uid)):
