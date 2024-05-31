@@ -22,9 +22,8 @@ validation_dir = os.getcwd()+"/validation"
 
 data_augmentation = keras.Sequential(
   [
-    layers.RandomFlip("horizontal"),
-    layers.RandomRotation(0.5),
-    layers.RandomZoom(0.3),
+    layers.RandomRotation(0.1),
+    layers.RandomZoom(0.1),
   ]
 )
 
@@ -34,14 +33,14 @@ train_ds = tf.keras.utils.image_dataset_from_directory(
   subset="training",
   seed=123,
   image_size=(img_height, img_width),
-  batch_size=batch_size)
+  batch_size=batch_size, color_mode='grayscale')
 val_ds = tf.keras.utils.image_dataset_from_directory(
   validation_dir,
   validation_split=0.2,
   subset="validation",
   seed=123,
   image_size=(img_height, img_width),
-  batch_size=batch_size)
+  batch_size=batch_size, color_mode='grayscale')
 # val_ds = val_ds.map(
 #   lambda x, y: (data_augmentation(x, training=True), y)
 # )
@@ -66,15 +65,16 @@ input("Press any key to continue")
 
 print()
 
+device = ""
 if len(gpus) > 1:
     strategy = tf.distribute.MirroredStrategy([gpu.name for gpu in gpus])
+    device = strategy.scope()
     print('Running on multiple GPUs ', [gpu.name for gpu in gpus])
 elif len(gpus) == 1:
-    strategy = tf.distribute.get_strategy()
+    device = tf.device("/GPU:0")
     print('Running on single GPU', gpus[0].name)
-    print('#accelerators: ', strategy.num_replicas_in_sync)
 else:
-    strategy = tf.distribute.get_strategy()
+    device = tf.distribute.get_strategy().scope()
     print("Running on single CPU only")
 
 print()
@@ -83,19 +83,35 @@ input("Press any key to build model")
 
 print("Building model...")
 
-with strategy.scope():
+with device:
 
     model = Sequential([
-        layers.Rescaling(1. / 255, input_shape=(260, 260, 3)),
-        layers.Conv2D(16, (3, 3), activation='relu'),
-        layers.MaxPooling2D(2, 2),
-        layers.Conv2D(32, (3, 3), activation='relu'),
-        layers.MaxPooling2D(2, 2),
+        # layers.Dropout(0.5),
+        # layers.Rescaling(1. / 255, input_shape=(260, 260, 3)),
+        # layers.Conv2D(16, (3, 3), activation='relu'),
+        # layers.MaxPooling2D(2, 2),
+        # layers.Conv2D(32, (3, 3), activation='relu'),
+        # layers.MaxPooling2D(2, 2),
+        # layers.Conv2D(64, (3, 3), activation='relu'),
+        # layers.MaxPooling2D(2, 2),
+        # layers.Flatten(),
+        # layers.Dense(128, activation='relu'),
+        # layers.Dense(6, activation='softmax')
+        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(img_height, img_width, 1)),
+        layers.MaxPooling2D((2, 2)),
         layers.Conv2D(64, (3, 3), activation='relu'),
-        layers.MaxPooling2D(2, 2),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(128, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(128, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(128, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
         layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dense(6, activation='softmax')
+        layers.Dense(512, activation='relu'),
+        layers.Dropout(0.55),
+        layers.Dense(256, activation='relu'),
+        layers.Dense(10, activation='softmax')
     ])
 
     model.compile(optimizer='adam',
@@ -155,7 +171,7 @@ with strategy.scope():
             subset="training",
             seed=123,
             image_size=(img_height, img_width),
-            batch_size=batch_size)
+            batch_size=batch_size, color_mode='grayscale')
         return train_ds.map(
             lambda x, y: (data_augmentation(x, training=True), y)
         )

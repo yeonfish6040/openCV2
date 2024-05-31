@@ -18,10 +18,12 @@ for e in trainList:
         if int(e.split(".")[0].split("_")[1]) > i:
             i = int(e.split(".")[0].split("_")[1])
 
+print('trains/train_%d.keras' % i)
 model = tf.keras.models.load_model('trains/train_%d.keras' % i)
 
 
 names = ['HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
+names = ['Hayyeon', 'HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
 # names = ["YeonJun", "Hyeyeon"]
 # names = ["YeonJun", "Yeonsu"]
 
@@ -45,7 +47,6 @@ while True:
         for (ex, ey, ew, eh) in eyes:
             if ey > h / 2:
                 continue
-
             isFace = True
 
             if ex < w / 2:
@@ -58,15 +59,14 @@ while True:
             cv2.putText(img, eye, (x + ex + ew, y + ey), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1,
                         lineType=cv2.LINE_AA)
             eyeList.append(img[y + ey:y + ey + eh, x + ex:x + ex + ew])
-
         if not isFace:
             continue
-
-        prediction = model.predict(np.array([cv2.resize(cvt_image[y:y + h, x:x + w], (height, width))]))
+        cv2.imshow("asdf", imgGray[y:y + h, x:x + w])
+        prediction = model.predict(np.array([cv2.resize(imgGray[y:y + h, x:x + w], (height, width))]))
         score = tf.nn.softmax(prediction[0])
         score_fixed = round(100 * np.max(score), 3)
 
-        if score_fixed > 90 and np.argmax(score) < names.__len__():
+        if score_fixed > 20 and np.argmax(score) < names.__len__():
             id = names[np.argmax(score)]
             imgList.append(img[y:y + h, x:x + w])
         else:

@@ -3,9 +3,9 @@ import numpy as np
 from chapter_006.stack import imStack
 
 
-###################################
-widthImg=540
-heightImg =640
+####################################
+widthImg=1080
+heightImg =1920
 #####################################
 
 cap = cv2.VideoCapture(0)
@@ -63,8 +63,8 @@ def getWarp(img,biggest):
     return imgCropped
 
 while True:
-    img = cv2.imread("../resources/img/document.jpeg")
-    # success, img = cap.read()
+    # img = cv2.imread("../resources/img/document.jpeg")
+    success, img = cap.read()
     img = cv2.resize(img,(widthImg,heightImg))
     imgContour = img.copy()
 
