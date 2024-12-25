@@ -67,7 +67,7 @@ with FaceLandmarker.create_from_options(options) as landmarker:
 
         imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        faces = faceCascade.detectMultiScale(imgGray, 1.2, 12)
+        faces = faceCascade.detectMultiScale(imgGray, 1.1, 10)
 
         eyeList = []
 
@@ -76,6 +76,7 @@ with FaceLandmarker.create_from_options(options) as landmarker:
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
             face_landmarker_result = landmarker.detect(mp_image)
             if face_landmarker_result.face_landmarks.__len__() != 0:
+                print(face_landmarker_result)
                 img = draw_landmarks_on_image(img, face_landmarker_result)
 
             eyes = eyeCascade.detectMultiScale(imgGray[y:y+h, x:x+w], 1.2, 6)

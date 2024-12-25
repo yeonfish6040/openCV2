@@ -1,6 +1,7 @@
 import math
 import os
 import cv2
+import subprocess
 import numpy as np
 import tensorflow as tf
 
@@ -21,62 +22,80 @@ for e in trainList:
 print('trains/train_%d.keras' % i)
 model = tf.keras.models.load_model('trains/train_%d.keras' % i)
 
+# train 8 or 7 is good
 
-names = ['HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
-names = ['Hayyeon', 'HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
+
+# names = ['HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
+# names = ['Hayyeon', 'HyunJun', 'JaeWon', 'MinHye', 'Rina', 'Soonmo', 'Yeonjun']
 # names = ["YeonJun", "Hyeyeon"]
 # names = ["YeonJun", "Yeonsu"]
+names = ["YeonJun", "NO"]
 
 height, width = 260, 260
 cam = cv2.VideoCapture(0)
 
-while True:
-    ret, img = cam.read()
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def run():
+    count = 0
+    while True:
+        ret, img = cam.read()
+        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = faceCascade.detectMultiScale(imgGray, 1.2, 2)
+        faces = faceCascade.detectMultiScale(imgGray, 1.1, 2)
 
-    imgList = []
-    for (x, y, w, h) in faces:
+        imgList = []
+        for (x, y, w, h) in faces:
 
-        cvt_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            cvt_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        isFace = False
-        eyes = eyeCascade.detectMultiScale(imgGray[y:y + h, x:x + w], 1.2, 6)
-        eyeList = []
-        for (ex, ey, ew, eh) in eyes:
-            if ey > h / 2:
+            isFace = False
+            eyes = eyeCascade.detectMultiScale(imgGray[y:y + h, x:x + w], 1.4, 2)
+            eyeList = []
+            # if eyes.__len__()%2 != 0:
+            #     continue
+            for (ex, ey, ew, eh) in eyes:
+                if ey > h / 2:
+                    continue
+                isFace = True
+
+                if ex < w / 2:
+                    eye = "right eye"
+                else:
+                    eye = "left eye"
+                # cv2.rectangle(img, (x+ex, y+ey), (x+ex+ew, y+ey+eh), (0, 255, 0), 2)
+                cv2.putText(img, eye, (x + ex + ew, y + ey), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 2,
+                            lineType=cv2.LINE_AA)
+                cv2.putText(img, eye, (x + ex + ew, y + ey), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1,
+                            lineType=cv2.LINE_AA)
+                eyeList.append(img[y + ey:y + ey + eh, x + ex:x + ex + ew])
+            if not isFace:
                 continue
-            isFace = True
+            # cv2.imshow("asdf", imgGray[y:y + h, x:x + w])
+            prediction = model.predict(np.array([cv2.resize(imgGray[y:y + h, x:x + w], (height, width))]))
+            score = tf.nn.softmax(prediction[0])
+            score_fixed = round(100 * np.max(score), 3)
 
-            if ex < w / 2:
-                eye = "right eye"
+            if score_fixed > 20 and np.argmax(score) < names.__len__():
+                id = names[np.argmax(score)]
+                imgList.append(img[y:y + h, x:x + w])
             else:
-                eye = "left eye"
-            # cv2.rectangle(img, (x+ex, y+ey), (x+ex+ew, y+ey+eh), (0, 255, 0), 2)
-            cv2.putText(img, eye, (x + ex + ew, y + ey), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 2,
-                        lineType=cv2.LINE_AA)
-            cv2.putText(img, eye, (x + ex + ew, y + ey), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1,
-                        lineType=cv2.LINE_AA)
-            eyeList.append(img[y + ey:y + ey + eh, x + ex:x + ex + ew])
-        if not isFace:
-            continue
-        cv2.imshow("asdf", imgGray[y:y + h, x:x + w])
-        prediction = model.predict(np.array([cv2.resize(imgGray[y:y + h, x:x + w], (height, width))]))
-        score = tf.nn.softmax(prediction[0])
-        score_fixed = round(100 * np.max(score), 3)
+                id = "unknown"
 
-        if score_fixed > 20 and np.argmax(score) < names.__len__():
-            id = names[np.argmax(score)]
-            imgList.append(img[y:y + h, x:x + w])
-        else:
-            id = "unknown"
+            if not id == "YeonJun":
+                count += 1
+            else:
+                count = 0
 
-        confidence = "  {0}%".format(score_fixed)
+            if count > 10:
+                subprocess.call('pmset displaysleepnow', shell=True)
+                return
 
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(img, str(id), (x + 5, y - 5), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-        cv2.putText(img, confidence, (x + 5, y + h - 5), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 1)
+            confidence = "  {0}%".format(score_fixed)
 
-    cv2.imshow("Result", img)
-    cv2.waitKey(1)
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(img, str(id), (x + 5, y - 5), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(img, confidence, (x + 5, y + h - 5), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 1)
+
+        # cv2.imshow("Result", img)
+        cv2.waitKey(1)
+
+run()

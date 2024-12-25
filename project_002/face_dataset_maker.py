@@ -19,7 +19,8 @@ cam = cv2.VideoCapture(0)
 # type = "validation"
 type = "faces"
 
-uid = input("Enter your ID: ")
+# uid = input("Enter your ID: ")
+uid = "0"
 if not os.path.exists(type+"/" + str(uid)):
     os.makedirs(type+"/" + str(uid))
 
@@ -44,6 +45,10 @@ def loop():
     faceList = []
 
     for (x, y, w, h) in faces:
+        eyes = eyeCascade.detectMultiScale(imgGray[y:y+h, x:x+w], 1.2, 6)
+        if eyes.__len__() != 2:
+            continue
+
         cv2.putText(img, "front_face", (x+w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 2, lineType=cv2.LINE_AA)
         cv2.putText(img, "front_face", (x+w, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0), 1, lineType=cv2.LINE_AA)
         cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)

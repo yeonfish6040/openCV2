@@ -3,7 +3,7 @@ import cv2
 import math
 import time
 import asyncio
-from websocket import create_connection
+# from websocket import create_connection
 
 
 from hand_detector_utils import *
